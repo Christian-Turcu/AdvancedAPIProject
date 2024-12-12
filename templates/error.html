@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced API Threat Intelligence Platform with Malware Scoring - Error</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="content-box">
+            <!-- Logo Section -->
+            <div class="logo-container">
+                <h1 class="logo">APITIPM</h1>
+                <p class="logo-subtitle">Advanced API Threat Intelligence Platform</p>
+            </div>
+
+            <!-- Error Message Section -->
+            <div class="neon-box error-container">
+                <i class="fas fa-exclamation-triangle fa-4x neon-text mb-4"></i>
+                <h2 class="neon-text mb-4">Oops! Something Went Wrong</h2>
+                <div class="error-message mb-4">
+                    <p class="neon-text">{{ error }}</p>
+                </div>
+                <a href="{{ url_for('index') }}" class="neon-button btn">
+                    <i class="fas fa-home me-2"></i>Return to Home
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</html>
