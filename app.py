@@ -11,6 +11,7 @@ from werkzeug.utils import secure_filename #*** Secure Filename Handling with We
 from dotenv import load_dotenv #*** Environment Variables for the Sensitive Data ***
 import tempfile
 import logging
+from urllib.request import urlopen
 
 # Load the config
 load_dotenv()
@@ -717,43 +718,48 @@ def analyze_file():
         return render_template('error.html', error="No selected file"), 400
 
     try:
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
-        
-        if not os.path.exists(filepath):
-            return render_template('error.html', error="Failed to save file"), 500
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            filename = secure_filename(file.filename)
+            file.save(temp_file.name)
+            filepath = temp_file.name
             
-        # Process the file
-        app.logger.info(f"Processing file: {filename}")
-        scan_result = scan_file_with_virustotal(filepath, filename)
-        
-        if scan_result.get('error'):
-            app.logger.error(f"Scan error: {scan_result['error']}")
-            cleanup_file(filepath)
-            return render_template('error.html', error=scan_result['error']), 500
-        
-        # Clean up file if not queued for analysis
-        if scan_result.get('status') != 'queued':
-            cleanup_file(filepath)
-        
-        response_data = {
-            'filename': filename,
-            'is_folder': False,
-            'scan_result': scan_result,
-            'status': scan_result.get('status', 'analyzed'),
-            'risk_level': scan_result.get('risk_level', 'Unknown'),
-            'score': float(scan_result.get('risk_score', 0))
-        }
-        
-        app.logger.info(f"Analysis complete for {filename}: {response_data}")
-        return render_template('result.html', **response_data)
+            # Process the file
+            app.logger.info(f"Processing file: {filename}")
+            scan_result = scan_file_with_virustotal(filepath, filename)
             
+            # Always delete the temporary file after scanning
+            try:
+                os.unlink(filepath)
+                app.logger.info(f"Successfully deleted temporary file: {filepath}")
+            except Exception as e:
+                app.logger.error(f"Error deleting temporary file {filepath}: {str(e)}")
+            
+            if scan_result.get('error'):
+                app.logger.error(f"Scan error: {scan_result['error']}")
+                return render_template('error.html', error=scan_result['error']), 500
+            
+            response_data = {
+                'filename': filename,
+                'is_folder': False,
+                'scan_result': scan_result,
+                'status': scan_result.get('status', 'analyzed'),
+                'risk_level': scan_result.get('risk_level', 'Unknown'),
+                'score': float(scan_result.get('risk_score', 0))
+            }
+            
+            app.logger.info(f"Analysis complete for {filename}: {response_data}")
+            return render_template('result.html', **response_data)
+                
     except Exception as e:
         error_msg = str(e)
         app.logger.error(f"Analysis error: {error_msg}")
+        # Ensure file is deleted even if an error occurs
         if 'filepath' in locals() and os.path.exists(filepath):
-            cleanup_file(filepath)
+            try:
+                os.unlink(filepath)
+            except:
+                pass
         return render_template('error.html', error=error_msg), 500
 
 @app.route('/test_analyze')
