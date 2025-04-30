@@ -34,7 +34,7 @@ def test_file_type_check():
     assert is_file_ok("test.bmp") == False
 
 def test_file_hash_calculation():
-    """Test file hash calculation"""
+    """Test the file hash calculation"""
     test_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'test_file.txt')
     with open(test_file_path, 'w') as f:
         f.write("Test content")
@@ -44,7 +44,7 @@ def test_file_hash_calculation():
     assert len(hash_result) == 64  # SHA256 hash length
 
 def test_large_file_handling():
-    """Test large file handling"""
+    """Test the large file handling"""
     test_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'large_file.txt')
     
     # Create a 2GB file (larger than our 1GB limit)
@@ -54,12 +54,11 @@ def test_large_file_handling():
     
     # Test that the file is too large
     with pytest.raises(Exception) as exc_info:
-        with open(test_file_path, 'rb') as f:
-            get_hash(f)
+        get_hash(test_file_path)
     assert "File too large" in str(exc_info.value)
 
 def test_file_cleanup():
-    """Test that temporary files are cleaned up"""
+    """Test that the temporary files are cleaned up"""
     test_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'test_cleanup.txt')
     
     # Create a test file
@@ -76,8 +75,8 @@ def test_file_cleanup():
     assert not os.path.exists(test_file_path)
 
 def test_supported_extensions():
-    """Test that supported extensions are correctly defined"""
+    """Testing to see if it supported correct extensions"""
     assert 'pdf' in SUPPORTED_EXTENSIONS
     assert 'exe' in SUPPORTED_EXTENSIONS
     assert 'zip' in SUPPORTED_EXTENSIONS
-    assert 'jpg' not in SUPPORTED_EXTENSIONS  # Should not be supported
+    assert 'jpg' not in SUPPORTED_EXTENSIONS 
