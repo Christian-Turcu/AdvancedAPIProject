@@ -15,15 +15,9 @@ def teardown_function():
     """Cleanup function to run after each test"""
     # Delete test uploads directory
     if os.path.exists(app.config['UPLOAD_FOLDER']):
-        try:
-            for file in os.listdir(app.config['UPLOAD_FOLDER']):
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], file)
-                if os.path.isfile(file_path):
-                    os.remove(file_path)
-            os.rmdir(app.config['UPLOAD_FOLDER'])
-        except PermissionError:
-            # If we can't delete due to permission, just log it
-            print(f"Warning: Could not delete test files due to permission error")
+        for file in os.listdir(app.config['UPLOAD_FOLDER']):
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], file))
+        os.rmdir(app.config['UPLOAD_FOLDER'])
 
 def test_file_type_check():
     """Test that only supported file types are allowed"""
@@ -59,19 +53,10 @@ def test_large_file_handling():
         f.write(b'\0')
     
     # Test that the file is too large
-    with open(test_file_path, 'rb') as f:
-        # Temporarily set max content length to 100MB for testing
-        original_max = app.config['MAX_CONTENT_LENGTH']
-        app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
-        
-        try:
+    with pytest.raises(Exception) as exc_info:
+        with open(test_file_path, 'rb') as f:
             get_hash(f)
-            assert False, "Expected Exception was not raised"
-        except Exception as e:
-            assert "File too large" in str(e)
-        
-        # Restore original max content length
-        app.config['MAX_CONTENT_LENGTH'] = original_max
+    assert "File too large" in str(exc_info.value)
 
 def test_file_cleanup():
     """Test that temporary files are cleaned up"""

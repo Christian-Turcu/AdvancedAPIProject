@@ -21,7 +21,7 @@ app = Flask(__name__)
 
 # Initialize Flask app
 app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024  # 1GB max file size
 app.config['SECRET_KEY'] = os.urandom(24)
 
 # Add JSON encoder for undefined values
@@ -43,16 +43,12 @@ app.jinja_env.filters['tojson'] = safe_tojson
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-# Basic app settings + Max is 100MB for scanning a file
+# Basic app settings + Max is 1GB for scanning a file
 UPLOAD_FOLDER = Path(__file__).parent / 'uploads'
-MAX_FILE_SIZE = 32 * 1024 * 1024 * 1024  # 32GB in bytes
+# Remove MAX_FILE_SIZE since we're using MAX_CONTENT_LENGTH
 
 # Configure Flask app
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
-
-# Configure maximum content length (100MB)
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
 
 # Create uploads folder if it doesn't exist
 if not os.path.exists(UPLOAD_FOLDER):
@@ -68,7 +64,6 @@ SUPPORTED_EXTENSIONS = {
 }
 
 app.config.update(
-    MAX_CONTENT_LENGTH=MAX_FILE_SIZE,
     UPLOAD_FOLDER=UPLOAD_FOLDER,
     ALLOWED_EXTENSIONS=SUPPORTED_EXTENSIONS
 )
@@ -88,8 +83,8 @@ vt_config = {
 def file_too_large(error):
     return render_template(
         'error.html',
-        error_message="Hold up! This file is a bit too chunky.",
-        error_details="Let's keep it under 32GB - that should cover most files."
+        error_message="The File is to Big",
+        error_details="The File/folder should be under 1GB."
     ), 413
 
 @app.errorhandler(413)
@@ -123,8 +118,7 @@ def validate_api_key():
 
 def is_file_ok(filename):
     """Check if the file type is allowed"""
-    allowed_extensions = {'zip', 'txt', 'pdf', 'doc', 'docx', 'rtf'}  # Added docx support
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in SUPPORTED_EXTENSIONS
 
 def check_upload_folder():
     """This Makes sure we can write to uploads folder"""
