@@ -172,6 +172,10 @@ def get_hash(file_path):
     try:
         file_size = os.path.getsize(file_path)
         
+        # Check if file is too large
+        if file_size > app.config['MAX_CONTENT_LENGTH']:
+            raise Exception(f"File too large: {file_size} bytes")
+            
         # For files larger than 100MB, use chunked processing
         if file_size > 100 * 1024 * 1024:  # 100MB
             app.logger.info(f"Processing large file ({file_size} bytes) in chunks")
@@ -191,7 +195,7 @@ def get_hash(file_path):
         return hash_sha256.hexdigest()
     except Exception as e:
         app.logger.error(f"Error calculating file hash: {str(e)}")
-        return None
+        raise
 
 def get_file_size(file_obj):
     """Get size of file object safely"""
