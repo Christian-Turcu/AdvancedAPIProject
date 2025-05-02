@@ -18,7 +18,30 @@ Technologies Used for my Advanced API
 - JavaScript
 - HTML/CSS
 - VirusTotal API
-- Render (Deployment Platform)
+- Render Deployment Platform
+
+Statistical Details I used for my Advanced API
+- Flask: Main web framework
+- Werkzeug: WSGI utility library
+- Gunicorn: WSGI server
+- Python-dotenv 
+- pytest: Testing framework
+- coverage: Code coverage analysis
+- Flake8: Code linter
+- requests: HTTP requests library
+- Python built in Libraries ↓
+- os
+- time
+- json
+- hashlib
+- shutil
+- zipfile
+- pathlib
+- tempfile
+- logging
+  
+- Github: Push and Pull
+- Render: Deployment
 
 If you want to set this up and locally deploy from your host, please follow these steps:
 1. Clone the repository like this:
