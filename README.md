@@ -68,3 +68,4 @@ The way to get this key is you go to this website link: https://www.virustotal.c
 
 API Documentation
 My application uses the VirusTotal API v3 for file analysis. [VirusTotal API Documentation](https://developers.virustotal.com/reference/overview).
+

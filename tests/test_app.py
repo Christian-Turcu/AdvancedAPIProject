@@ -1,5 +1,7 @@
 import os
 import pytest
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app import app, get_hash, is_file_ok, SUPPORTED_EXTENSIONS
 
 def setup_function():
@@ -19,32 +21,32 @@ def teardown_function():
             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], file))
         os.rmdir(app.config['UPLOAD_FOLDER'])
 
-def test_file_type_check():
-    """Test that only supported file types are allowed"""
-    # Test with supported file extensions
-    assert is_file_ok("test.pdf") == True
-    assert is_file_ok("test.exe") == True
-    assert is_file_ok("test.zip") == True
-    assert is_file_ok("test.docx") == True
-    assert is_file_ok("test.xlsx") == True
+def test_filetype():
+    """Test file type validation"""
+    # Test supported file extensions
+    assert is_file_ok("test.pdf")
+    assert is_file_ok("test.exe")
+    assert is_file_ok("test.zip")
+    assert is_file_ok("test.docx")
+    assert is_file_ok("test.xlsx")
     
-    # Test with unsupported file extensions
-    assert is_file_ok("test.jpg") == False
-    assert is_file_ok("test.mp3") == False
-    assert is_file_ok("test.bmp") == False
+    # Test unsupported file extensions
+    assert not is_file_ok("test.jpg")
+    assert not is_file_ok("test.mp3")
+    assert not is_file_ok("test.bmp")
 
-def test_file_hash_calculation():
-    """Test the file hash calculation"""
+def test_filehash():
+    """Test file hash calculation"""
     test_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'test_file.txt')
     with open(test_file_path, 'w') as f:
         f.write("Test content")
     
     hash_result = get_hash(test_file_path)
-    assert hash_result is not None
+    assert hash_result
     assert len(hash_result) == 64  # SHA256 hash length
 
-def test_large_file_handling():
-    """Test the large file handling"""
+def test_largefile():
+    """Test large file handling"""
     test_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'large_file.txt')
     
     # Create a 2GB file (larger than our 1GB limit)
@@ -57,8 +59,8 @@ def test_large_file_handling():
         get_hash(test_file_path)
     assert "File too large" in str(exc_info.value)
 
-def test_file_cleanup():
-    """Test that the temporary files are cleaned up"""
+def test_filedelete():
+    """Test file cleanup"""
     test_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'test_cleanup.txt')
     
     # Create a test file
@@ -74,9 +76,53 @@ def test_file_cleanup():
     # The file should be gone
     assert not os.path.exists(test_file_path)
 
-def test_supported_extensions():
-    """Testing to see if it supported correct extensions"""
+def test_supportedextensions():
+    """Test supported file extensions"""
+    # Test supported extensions
     assert 'pdf' in SUPPORTED_EXTENSIONS
     assert 'exe' in SUPPORTED_EXTENSIONS
     assert 'zip' in SUPPORTED_EXTENSIONS
-    assert 'jpg' not in SUPPORTED_EXTENSIONS 
+    assert 'docx' in SUPPORTED_EXTENSIONS
+    assert 'xlsx' in SUPPORTED_EXTENSIONS
+    
+    # Test unsupported extensions
+    assert 'jpg' not in SUPPORTED_EXTENSIONS
+
+# VirusTotal API Integration Tests
+
+
+def test_filescanning():
+    """Test file scanning with VirusTotal"""
+    from app import scan_file_with_virustotal
+    test_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'test_scan.txt')
+    invalid_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'test_invalid.txt')
+    
+    # Create test files
+    with open(test_file_path, 'w') as f:
+        f.write("Test content")
+    with open(invalid_file_path, 'w') as f:
+        f.write("Invalid content")
+    
+    try:
+        # Test with valid file
+        result = scan_file_with_virustotal(test_file_path, 'test_scan.txt')
+        assert 'status' in result
+        assert 'malicious' in result
+        assert 'risk_level' in result
+        assert 'risk_score' in result
+        assert result['status'] in ['analyzed', 'queued', 'error']
+        
+        # Test with invalid file type
+        result = scan_file_with_virustotal(invalid_file_path, 'test_invalid.txt')
+        assert 'status' in result
+        assert 'malicious' in result
+        assert 'risk_level' in result
+        assert 'risk_score' in result
+        assert result['status'] in ['analyzed', 'queued', 'error']
+        
+    finally:
+        # Clean up test files
+        if os.path.exists(test_file_path):
+            os.remove(test_file_path)
+        if os.path.exists(invalid_file_path):
+            os.remove(invalid_file_path)

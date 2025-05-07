@@ -108,13 +108,7 @@ def check_file_size():
                 return jsonify({"error": "File too large"}), 413
             return render_template('error.html', error="File too large"), 413
 
-def validate_api_key():
-    """This Validates the VirusTotal API key"""
-    try:
-        response = requests.get(f"{vt_config['base']}/users/current", headers=vt_config['headers'])
-        return response.status_code == 200
-    except:
-        return False
+
 
 def is_file_ok(filename):
     """Check if the file type is allowed"""
